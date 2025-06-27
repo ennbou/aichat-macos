@@ -12,8 +12,12 @@ let project = Project(
             destinations: .macOS, 
             product: .app,
             bundleId: "com.renault.AIChat",
-            sources: ["AIChat/**"], 
-            dependencies: [], 
+            sources: ["AIChat/**"],
+            scripts: [
+                .pre(script: "git diff --name-only HEAD | grep '\\.swift$' | xargs -0 xcrun swift-format format -i", name: "Swift Format"),
+                .pre(script: "git diff --name-only HEAD | grep '\\.swift$' | xargs -n1 swiftlint lint --path", name: "Swift Lint")
+            ],
+            dependencies: [],
             settings: .settings(configurations: [ 
                 .debug(name: "Debug", xcconfig: "./xcconfigs/AIChat.xcconfig"), 
                 .debug(name: "Release", xcconfig: "./xcconfigs/AIChat.xcconfig"), 
