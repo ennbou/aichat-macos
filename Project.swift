@@ -14,7 +14,14 @@ let project = Project(
       destinations: .macOS,
       product: .app,
       bundleId: "com.renault.AIChat",
+      infoPlist: .extendingDefault(with: [
+        "CFBundleIconFile": "AppIcon.icns"
+      ]),
       sources: ["AIChat/**"],
+      resources: [
+        "AIChat/Assets.xcassets",
+        "AppIcon.icns",
+      ],
       scripts: [
         .pre(
           script:
