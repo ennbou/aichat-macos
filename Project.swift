@@ -31,11 +31,13 @@ let project = Project(
         .pre(
           script:
             "git diff --name-only HEAD | grep '\\.swift$' | xargs -n1 xcrun swift-format format -i",
-          name: "Swift Format"
+          name: "Swift Format",
+          basedOnDependencyAnalysis: false
         ),
         .pre(
           script: "git diff --name-only HEAD | grep '\\.swift$' | xargs -n1 swiftlint lint",
-          name: "Swift Lint"
+          name: "Swift Lint",
+          basedOnDependencyAnalysis: false
         ),
       ],
       dependencies: [
