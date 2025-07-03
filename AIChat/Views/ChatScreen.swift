@@ -5,6 +5,7 @@
 //  Created by Bouch on 6/25/25.
 //
 
+import Networking
 import SwiftData
 import SwiftUI
 
@@ -68,6 +69,7 @@ struct ChatView: View {
   @Environment(\.modelContext) private var modelContext
   var chatSession: ChatSession
   @State private var messageText = ""
+  @State private var isGeneratingResponse = false
   @Query private var messages: [Message]
 
   init(chatSession: ChatSession) {
@@ -104,36 +106,58 @@ struct ChatView: View {
         }
       }
 
-      HStack(alignment: .bottom, spacing: 0) {
-        HStack(alignment: .bottom, spacing: 8) {
-          TextField("Type a message...", text: $messageText, axis: .vertical)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .lineLimit(1...6)
-            .font(.body)
-            .textFieldStyle(CustomTextFieldStyle())
-            .onKeyPress(.return) {
-              messageText += "\n"
-              return .handled
-            }
-
-          Button(action: sendMessage) {
-            Image(systemName: "paperplane.fill")
-              .foregroundColor(
-                messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .blue
-              )
-              .font(.system(size: 20))
-              .background(Color.clear)
+      VStack(spacing: 8) {
+        // AI thinking indicator
+        if isGeneratingResponse {
+          HStack {
+            ProgressView()
+              .scaleEffect(0.7)
+            Text("AI is thinking...")
+              .font(.caption)
+              .foregroundColor(.secondary)
+            Spacer()
           }
-          .buttonStyle(PlainButtonStyle())
-          .disabled(messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-          .padding(.trailing, 12)
-          .padding(.bottom, 12)
+          .padding(.horizontal)
+          .padding(.bottom, 4)
         }
-        .background(Color.gray.opacity(0.2))
-        .cornerRadius(12)
+
+        HStack(alignment: .bottom, spacing: 0) {
+          HStack(alignment: .bottom, spacing: 8) {
+            TextField("Type a message...", text: $messageText, axis: .vertical)
+              .padding(.horizontal, 16)
+              .padding(.vertical, 12)
+              .lineLimit(1...6)
+              .font(.body)
+              .textFieldStyle(CustomTextFieldStyle())
+              .onKeyPress(.return) {
+                messageText += "\n"
+                return .handled
+              }
+              .disabled(isGeneratingResponse)
+
+            Button(action: sendMessage) {
+              Image(systemName: "paperplane.fill")
+                .foregroundColor(
+                  messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    || isGeneratingResponse ? .gray : .blue
+                )
+                .font(.system(size: 20))
+                .background(Color.clear)
+            }
+            .buttonStyle(PlainButtonStyle())
+            .disabled(
+              messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || isGeneratingResponse
+            )
+            .padding(.trailing, 12)
+            .padding(.bottom, 12)
+          }
+          .background(Color.gray.opacity(0.2))
+          .cornerRadius(12)
+        }
+        .padding(.horizontal)
       }
-      .padding()
+      .padding(.vertical)
     }
     .navigationTitle(chatSession.title)
   }
@@ -149,30 +173,76 @@ struct ChatView: View {
 
     chatSession.updateLastActivity()
 
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-      let aiMessage = Message(
-        content: generateAIResponse(to: trimmedMessage),
+    // Update session title with the first user message
+    if messages.isEmpty || (messages.count == 1 && messages.first?.isFromUser == false) {
+      renameSession()
+    }
+
+    // Clear the input field immediately
+    messageText = ""
+
+    // Get API key from settings
+    let apiKey = UserDefaults.standard.string(forKey: "openaiApiKey") ?? ""
+
+    // Show a placeholder message while waiting for OpenAI's response
+    if apiKey.isEmpty {
+      let errorMessage = Message(
+        content: "Please set your OpenAI API key in the settings.",
         isFromUser: false,
         chatSession: self.chatSession
       )
-      modelContext.insert(aiMessage)
+      modelContext.insert(errorMessage)
       chatSession.updateLastActivity()
+      return
     }
 
-    messageText = ""
-  }
+    // Set generating response state to true
+    isGeneratingResponse = true
 
-  private func generateAIResponse(to message: String) -> String {
-    let responses = [
-      "That's interesting! Tell me more.",
-      "I understand what you're saying.",
-      "Thanks for sharing that with me.",
-      "How can I help you with that?",
-      "That sounds great!",
-      "I'm here to help you with any questions.",
-      "What would you like to know more about?",
-    ]
-    return responses.randomElement() ?? "I'm processing your message..."
+    // Create and send the OpenAI request
+    let openAIService = ServiceFactory.shared.makeOpenAIService()
+    let request = openAIService.createChatRequest(
+      userQuery: trimmedMessage,
+      model: "gpt-4o-mini-2024-07-18",
+      systemPrompt: "You are a helpful AI assistant.",
+      temperature: 0.7,
+      maxTokens: 1000
+    )
+
+    openAIService.sendChatRequest(apiKey: apiKey, request: request) { result in
+      DispatchQueue.main.async {
+        // Set generating response state to false
+        self.isGeneratingResponse = false
+
+        switch result {
+        case .success(let response):
+          if let messageContent = response.firstMessage?.content {
+            let aiMessage = Message(
+              content: messageContent,
+              isFromUser: false,
+              chatSession: self.chatSession
+            )
+            self.modelContext.insert(aiMessage)
+          } else {
+            let errorMessage = Message(
+              content: "Received an empty response from the AI.",
+              isFromUser: false,
+              chatSession: self.chatSession
+            )
+            self.modelContext.insert(errorMessage)
+          }
+        case .failure(let error):
+          let errorMessage = Message(
+            content: "Error: \(error.localizedDescription)",
+            isFromUser: false,
+            chatSession: self.chatSession
+          )
+          self.modelContext.insert(errorMessage)
+        }
+
+        self.chatSession.updateLastActivity()
+      }
+    }
   }
 
   private func renameSession() {
