@@ -4,6 +4,11 @@ let TARGETNAME = "AIChat"
 
 let project = Project(
   name: TARGETNAME,
+  options: .options(
+    automaticSchemesOptions: .disabled,
+    disableBundleAccessors: false,
+    disableSynthesizedResourceAccessors: false
+  ),
   settings: .settings(configurations: [
     .debug(name: "Debug", xcconfig: "./xcconfigs/AIChat-Project.xcconfig"),
     .release(name: "Release", xcconfig: "./xcconfigs/AIChat-Project.xcconfig"),
@@ -13,7 +18,7 @@ let project = Project(
       name: TARGETNAME,
       destinations: .macOS,
       product: .app,
-      bundleId: "com.renault.AIChat",
+      bundleId: "com.ennbou.AIChat",
       infoPlist: .extendingDefault(with: [
         "CFBundleIconFile": "AppIcon.icns"
       ]),
@@ -33,7 +38,9 @@ let project = Project(
           name: "Swift Lint"
         ),
       ],
-      dependencies: [],
+      dependencies: [
+        .project(target: "Networking", path: .relativeToRoot("Networking"))
+      ],
       settings: .settings(configurations: [
         .debug(name: "Debug", xcconfig: "./xcconfigs/AIChat.xcconfig"),
         .debug(name: "Release", xcconfig: "./xcconfigs/AIChat.xcconfig"),
@@ -58,6 +65,12 @@ let project = Project(
         runPostActionsOnFailure: true
       ),
       runAction: .runAction(configuration: "Debug")
-    )
+    ),
+    .scheme(
+      name: "Networking",
+      shared: true,
+      buildAction: .buildAction(targets: ["Networking"]),
+      testAction: .targets(["NetworkingTests"])
+    ),
   ]
 )
