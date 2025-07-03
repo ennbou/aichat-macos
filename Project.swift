@@ -65,12 +65,6 @@ let project = Project(
         runPostActionsOnFailure: true
       ),
       runAction: .runAction(configuration: "Debug")
-    ),
-    .scheme(
-      name: "Networking",
-      shared: true,
-      buildAction: .buildAction(targets: ["Networking"]),
-      testAction: .targets(["NetworkingTests"])
-    ),
+    )
   ]
 )
