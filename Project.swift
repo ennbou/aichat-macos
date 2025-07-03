@@ -41,7 +41,8 @@ let project = Project(
         ),
       ],
       dependencies: [
-        .project(target: "Networking", path: .relativeToRoot("Networking"))
+        .project(target: "Networking", path: .relativeToRoot("Networking")),
+        .external(name: "MarkdownUI"),
       ],
       settings: .settings(configurations: [
         .debug(name: "Debug", xcconfig: "./xcconfigs/AIChat.xcconfig"),

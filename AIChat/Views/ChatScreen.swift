@@ -5,6 +5,7 @@
 //  Created by Bouch on 6/25/25.
 //
 
+import MarkdownUI
 import Networking
 import SwiftData
 import SwiftUI
@@ -275,17 +276,25 @@ struct MessageBubble: View {
       if message.isFromUser {
         Spacer(minLength: 60)
         Text(message.content)
+          .textSelection(.enabled)
           .padding(.horizontal, 16)
           .padding(.vertical, 10)
           .background(Color.blue)
           .foregroundColor(.white)
           .cornerRadius(18)
       } else {
-        Text(message.content)
+        Markdown(MarkdownContent(message.content))
+          .textSelection(.enabled)
+          .markdownTheme(
+            .gitHub.text {
+              FontSize(14)
+            }
+          )
+          .frame(maxWidth: .infinity, alignment: .leading)
           .padding(.horizontal, 16)
           .padding(.vertical, 10)
-          .background(Color.gray.opacity(0.3))
-          .foregroundColor(.primary)
+          .font(Font.system(size: 12, weight: .medium))
+          .background(Color.white)
           .cornerRadius(18)
         Spacer(minLength: 60)
       }
