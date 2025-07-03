@@ -118,5 +118,5 @@ Temporary Items
 
 buildServer.json 
 
-*.xcodeproj/*
-*.xcworkspace/*
+**/*.xcodeproj/*
+**/*.xcworkspace/*
