@@ -6,23 +6,21 @@
 //
 
 import Foundation
-import SwiftData
+import Storage
 
-@Model
-class Message {
-  var id: UUID
-  var content: String
-  var timestamp: Date
-  var isFromUser: Bool
+// This file now contains utility methods for working with MessageModel from Storage module
 
-  // Relationship to chat session
-  var chatSession: ChatSession?
-
-  init(content: String, isFromUser: Bool, chatSession: ChatSession? = nil) {
-    self.id = UUID()
-    self.content = content
-    self.timestamp = Date()
-    self.isFromUser = isFromUser
-    self.chatSession = chatSession
+extension MessageModel {
+  // Factory method for creating messages in the AIChat app
+  static func create(
+    content: String,
+    isUserMessage: Bool,
+    chatSession: ChatSessionModel? = nil
+  ) -> MessageModel {
+    let message = MessageModel(
+      content: content,
+      isUserMessage: isUserMessage
+    )
+    return message
   }
 }

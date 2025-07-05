@@ -118,5 +118,9 @@ Temporary Items
 
 buildServer.json 
 
+# Tuist
+**/Derived/
+Derived/
+
 **/*.xcodeproj/*
 **/*.xcworkspace/*

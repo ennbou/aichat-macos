@@ -5,25 +5,24 @@
 //  Created by Bouch on 6/25/25.
 //
 
-import AppKit
-import SwiftData
+import Storage
 import SwiftUI
 
 struct SidebarView: View {
-  @Environment(\.modelContext) private var modelContext
-  @Query(sort: \ChatSession.lastUpdatedAt, order: .reverse) private var chatSessions: [ChatSession]
-  @Binding var selectedChatSession: ChatSession?
+  // Using our ChatRepository instead of direct SwiftData queries
+  @StateObject private var chatRepository = ChatRepository.shared
+  @Binding var selectedChatSession: ChatSessionModel?
 
   @Environment(\.openWindow) private var openWindow
 
-  @State private var sessionToRename: ChatSession?
+  @State private var sessionToRename: ChatSessionModel?
   @State private var newSessionName: String = ""
   @State private var showRenameDialog: Bool = false
 
   var body: some View {
     VStack {
       List(selection: $selectedChatSession) {
-        ForEach(chatSessions) { session in
+        ForEach(chatRepository.chatSessions) { session in
           NavigationLink(value: session) {
             HStack {
               VStack(alignment: .leading) {
@@ -123,6 +122,16 @@ struct SidebarView: View {
         Label("New Chat", systemImage: "square.and.pencil")
       }
     }
+    .onAppear {
+      chatRepository.refreshSessions()
+    }
+    .onChange(of: selectedChatSession) { oldValue, newValue in
+      print("test")
+      if oldValue != newValue {
+        // Only refresh when selection actually changes
+        chatRepository.refreshSessions()
+      }
+    }
     .alert("Rename Chat", isPresented: $showRenameDialog) {
       TextField("Chat Name", text: $newSessionName)
 
@@ -133,6 +142,7 @@ struct SidebarView: View {
       Button("Rename") {
         if let session = sessionToRename, !newSessionName.isEmpty {
           session.title = newSessionName.trimmingCharacters(in: .whitespacesAndNewlines)
+          chatRepository.updateSession(session)
         }
         showRenameDialog = false
       }
@@ -149,31 +159,27 @@ struct SidebarView: View {
 
   private func createNewChat() {
     // Check if there's already an empty chat session
-    if let emptySession = chatSessions.first(where: { $0.isEmpty }) {
+    if let emptySession = chatRepository.chatSessions.first(where: { $0.isEmpty }) {
       // Redirect to the existing empty session
       selectedChatSession = emptySession
     } else {
       // Create a new session
-      let newSession = ChatSession(title: "Chat \(dateFormatter.string(from: Date()))")
-      modelContext.insert(newSession)
+      let newSession = chatRepository.createSession(
+        title: "Chat \(dateFormatter.string(from: Date()))"
+      )
       selectedChatSession = newSession
     }
   }
 
   private func deleteChatSessions(at offsets: IndexSet) {
     for index in offsets {
-      let session = chatSessions[index]
+      let session = chatRepository.chatSessions[index]
 
-      // Delete all messages first
-      for message in session.messages {
-        modelContext.delete(message)
-      }
-
-      // Then delete the session
-      modelContext.delete(session)
+      // Delete the session using the repository
+      chatRepository.deleteSession(session)
 
       if selectedChatSession == session {
-        selectedChatSession = chatSessions.first(where: { $0 != session })
+        selectedChatSession = chatRepository.chatSessions.first(where: { $0 != session })
       }
     }
   }
@@ -184,22 +190,28 @@ struct SidebarView: View {
     return formatter
   }
 
-  private func renameSession(_ session: ChatSession) {
+  private func renameSession(_ session: ChatSessionModel) {
     // Show the rename dialog
     sessionToRename = session
     newSessionName = session.title
     showRenameDialog = true
   }
 
-  private func archiveSession(_ session: ChatSession) {
+  private func archiveSession(_ session: ChatSessionModel) {
     // Toggle the archive state
     session.isArchived = !session.isArchived
+    chatRepository.updateSession(session)
   }
 
-  private func deleteSession(_ session: ChatSession) {
-    modelContext.delete(session)
-    if selectedChatSession == session {
-      selectedChatSession = chatSessions.first(where: { $0 != session })
+  private func deleteSession(_ session: ChatSessionModel) {
+    // Store whether this session was selected before deletion
+    let wasSelected = selectedChatSession == session
+
+    chatRepository.deleteSession(session)
+
+    // If the deleted session was selected, select another one
+    if wasSelected {
+      selectedChatSession = chatRepository.chatSessions.first
     }
   }
 }

@@ -6,31 +6,34 @@
 //
 
 import Foundation
-import SwiftData
+import Storage
 
-@Model
-class ChatSession {
-  var id: UUID
-  var title: String
-  var createdAt: Date
-  var lastUpdatedAt: Date
-  var isArchived: Bool = false
-  @Relationship(deleteRule: .cascade, inverse: \Message.chatSession) var messages: [Message] = []
+// This file now contains utility methods for working with ChatSessionModel from Storage module
 
-  init(title: String) {
-    self.id = UUID()
-    self.title = title
-    self.createdAt = Date()
-    self.lastUpdatedAt = Date()
-    self.isArchived = false
-    self.messages = []
+extension ChatSessionModel {
+  // Helper to access lastModifiedAt with the old name for transition purposes
+  var lastUpdatedAt: Date {
+    return lastModifiedAt
   }
 
+  // Update the last activity time
   func updateLastActivity() {
-    self.lastUpdatedAt = Date()
+    self.lastModifiedAt = Date()
   }
 
+  // Check if the session has no messages
   var isEmpty: Bool {
     return messages.isEmpty
+  }
+
+  // Factory method for creating chat sessions in the AIChat app
+  static func create(title: String) -> ChatSessionModel {
+    return ChatSessionModel(
+      title: title,
+      createdAt: Date(),
+      lastModifiedAt: Date(),
+      isArchived: false,
+      messages: []
+    )
   }
 }

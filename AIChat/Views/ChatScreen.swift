@@ -7,13 +7,13 @@
 
 import MarkdownUI
 import Networking
-import SwiftData
+import Storage
 import SwiftUI
 
 struct ChatScreen: View {
-  @Environment(\.modelContext) private var modelContext
-  @State private var selectedChatSession: ChatSession?
-  @Query private var allChatSessions: [ChatSession]
+  // Using our ChatRepository instead of direct SwiftData queries
+  @StateObject private var chatRepository = ChatRepository.shared
+  @State private var selectedChatSession: ChatSessionModel?
 
   var body: some View {
     NavigationSplitView {
@@ -21,11 +21,13 @@ struct ChatScreen: View {
     } detail: {
       if let session = selectedChatSession {
         ChatView(chatSession: session)
+          .id(session.id)  // Force view recreation when session changes
       } else {
         EmptyStateView()
       }
     }
     .onAppear {
+      chatRepository.refreshSessions()
       ensureSelectedChatSession()
     }
     .onChange(of: selectedChatSession) { oldSession, newSession in
@@ -35,55 +37,41 @@ struct ChatScreen: View {
 
   private func ensureSelectedChatSession() {
     if selectedChatSession == nil {
-      let descriptor = FetchDescriptor<ChatSession>(sortBy: [
-        SortDescriptor(\.lastUpdatedAt, order: .reverse)
-      ])
-      do {
-        let sessions = try modelContext.fetch(descriptor)
-        if let firstSession = sessions.first {
-          selectedChatSession = firstSession
-        } else {
-          let newSession = ChatSession(title: "New Chat")
-          modelContext.insert(newSession)
-          selectedChatSession = newSession
-        }
-      } catch {
-        print("Error fetching chat sessions: \(error)")
-        let newSession = ChatSession(title: "New Chat")
-        modelContext.insert(newSession)
+      // Use the repository's already loaded sessions
+      let sessions = chatRepository.chatSessions
+
+      if let firstSession = sessions.first {
+        selectedChatSession = firstSession
+      } else {
+        // Create a new session if none exist
+        let newSession = chatRepository.createSession(title: "New Chat")
         selectedChatSession = newSession
       }
     }
   }
 
-  private func handleSessionChange(oldSession: ChatSession?, newSession: ChatSession?) {
+  private func handleSessionChange(oldSession: ChatSessionModel?, newSession: ChatSessionModel?) {
     if let oldSession = oldSession, oldSession.isEmpty, newSession != oldSession {
-      let otherEmptySessions = allChatSessions.filter { $0.isEmpty && $0.id != oldSession.id }
-      if !otherEmptySessions.isEmpty, let newSession = newSession, !newSession.isEmpty {
-        modelContext.delete(oldSession)
+      let otherEmptySessions = chatRepository.chatSessions.filter {
+        $0.isEmpty && $0.id != oldSession.id
       }
+      //      if !otherEmptySessions.isEmpty, let newSession = newSession, !newSession.isEmpty {
+      //        chatRepository.deleteSession(oldSession)
+      //        chatRepository.refreshSessions()
+      //      }
     }
   }
 }
 
 struct ChatView: View {
-  @Environment(\.modelContext) private var modelContext
-  var chatSession: ChatSession
+  @StateObject private var chatRepository = ChatRepository.shared
+  var chatSession: ChatSessionModel
   @State private var messageText = ""
   @State private var isGeneratingResponse = false
-  @Query private var messages: [Message]
+  @State private var messages: [MessageModel] = []
 
-  init(chatSession: ChatSession) {
+  init(chatSession: ChatSessionModel) {
     self.chatSession = chatSession
-    let id = chatSession.id
-    let predicate = #Predicate<Message> { message in
-      message.chatSession?.id == id
-    }
-    let descriptor = FetchDescriptor<Message>(
-      predicate: predicate,
-      sortBy: [SortDescriptor(\.timestamp, order: .forward)]
-    )
-    self._messages = Query(descriptor)
   }
 
   var body: some View {
@@ -161,6 +149,19 @@ struct ChatView: View {
       .padding(.vertical)
     }
     .navigationTitle(chatSession.title)
+    .onAppear {
+      loadMessages()
+    }
+    .onChange(of: chatSession.id) { oldValue, newValue in
+      if oldValue != newValue {
+        loadMessages()
+      }
+    }
+  }
+
+  private func loadMessages() {
+    // Sort messages by timestamp
+    messages = chatSession.messages.sorted(by: { $0.timestamp < $1.timestamp })
   }
 
   private func sendMessage() {
@@ -169,13 +170,21 @@ struct ChatView: View {
       return
     }
 
-    let userMessage = Message(content: trimmedMessage, isFromUser: true, chatSession: chatSession)
-    modelContext.insert(userMessage)
+    // Use the repository to add the message
+    let userMessage = chatRepository.addMessage(
+      content: trimmedMessage,
+      isUserMessage: true,
+      to: chatSession
+    )
 
     chatSession.updateLastActivity()
+    chatRepository.updateSession(chatSession)
+
+    // Refresh messages
+    loadMessages()
 
     // Update session title with the first user message
-    if messages.isEmpty || (messages.count == 1 && messages.first?.isFromUser == false) {
+    if messages.count <= 1 {
       renameSession()
     }
 
@@ -187,13 +196,14 @@ struct ChatView: View {
 
     // Show a placeholder message while waiting for OpenAI's response
     if apiKey.isEmpty {
-      let errorMessage = Message(
+      let errorMessage = chatRepository.addMessage(
         content: "Please set your OpenAI API key in the settings.",
-        isFromUser: false,
-        chatSession: self.chatSession
+        isUserMessage: false,
+        to: chatSession
       )
-      modelContext.insert(errorMessage)
       chatSession.updateLastActivity()
+      chatRepository.updateSession(chatSession)
+      loadMessages()
       return
     }
 
@@ -218,39 +228,43 @@ struct ChatView: View {
         switch result {
         case .success(let response):
           if let messageContent = response.firstMessage?.content {
-            let aiMessage = Message(
+            // Use repository to add AI response
+            self.chatRepository.addMessage(
               content: messageContent,
-              isFromUser: false,
-              chatSession: self.chatSession
+              isUserMessage: false,
+              to: self.chatSession
             )
-            self.modelContext.insert(aiMessage)
           } else {
-            let errorMessage = Message(
+            // Handle empty response
+            self.chatRepository.addMessage(
               content: "Received an empty response from the AI.",
-              isFromUser: false,
-              chatSession: self.chatSession
+              isUserMessage: false,
+              to: self.chatSession
             )
-            self.modelContext.insert(errorMessage)
           }
         case .failure(let error):
-          let errorMessage = Message(
+          // Handle error
+          self.chatRepository.addMessage(
             content: "Error: \(error.localizedDescription)",
-            isFromUser: false,
-            chatSession: self.chatSession
+            isUserMessage: false,
+            to: self.chatSession
           )
-          self.modelContext.insert(errorMessage)
         }
 
         self.chatSession.updateLastActivity()
+        self.chatRepository.updateSession(self.chatSession)
+        // Refresh messages after receiving AI response
+        self.loadMessages()
       }
     }
   }
 
   private func renameSession() {
-    let firstMessage = messages.first(where: { $0.isFromUser })?.content ?? ""
+    let firstMessage = messages.first(where: { $0.isUserMessage })?.content ?? ""
     let truncated = String(firstMessage.prefix(20))
     chatSession.title =
       truncated.isEmpty ? "Chat" : truncated + (truncated.count >= 20 ? "..." : "")
+    chatRepository.updateSession(chatSession)
   }
 }
 
@@ -269,11 +283,11 @@ struct EmptyStateView: View {
 }
 
 struct MessageBubble: View {
-  let message: Message
+  let message: MessageModel
 
   var body: some View {
     HStack {
-      if message.isFromUser {
+      if message.isUserMessage {
         Spacer(minLength: 60)
         Text(message.content)
           .textSelection(.enabled)
@@ -324,7 +338,6 @@ struct MessageBubble: View {
 
 #Preview {
   ChatScreen()
-    .modelContainer(for: Message.self, inMemory: true)
 }
 
 struct CustomTextFieldStyle: TextFieldStyle {

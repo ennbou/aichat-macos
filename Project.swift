@@ -42,6 +42,7 @@ let project = Project(
       ],
       dependencies: [
         .project(target: "Networking", path: .relativeToRoot("Networking")),
+        .project(target: "Storage", path: .relativeToRoot("Storage")),
         .external(name: "MarkdownUI"),
       ],
       settings: .settings(configurations: [
