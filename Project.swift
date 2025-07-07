@@ -64,6 +64,11 @@ let project = Project(
           name: "Dead Code Scan",
           basedOnDependencyAnalysis: false
         ),
+        .pre(
+          script: "tuist graph --format png --output-path graph.png --no-open",
+          name: "Generate Dependency Graph",
+          basedOnDependencyAnalysis: false
+        ),
       ]
     ),
   ],
