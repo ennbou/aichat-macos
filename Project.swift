@@ -27,19 +27,7 @@ let project = Project(
         "AIChat/Assets.xcassets",
         "AppIcon.icns",
       ],
-      scripts: [
-        .pre(
-          script:
-            "git diff --name-only HEAD | grep '\\.swift$' | xargs -n1 xcrun swift-format format -i",
-          name: "Swift Format",
-          basedOnDependencyAnalysis: false
-        ),
-        .pre(
-          script: "git diff --name-only HEAD | grep '\\.swift$' | xargs -n1 swiftlint lint",
-          name: "Swift Lint",
-          basedOnDependencyAnalysis: false
-        ),
-      ],
+      scripts: [],
       dependencies: [
         .project(target: "Networking", path: .relativeToRoot("Networking")),
         .project(target: "Storage", path: .relativeToRoot("Storage")),
@@ -49,7 +37,35 @@ let project = Project(
         .debug(name: "Debug", xcconfig: "./xcconfigs/AIChat.xcconfig"),
         .debug(name: "Release", xcconfig: "./xcconfigs/AIChat.xcconfig"),
       ])
-    )
+    ),
+    .target(
+      name: "Code_Quality",
+      destinations: .macOS,
+      product: .commandLineTool,
+      bundleId: "com.ennbou.AIChat.code.quality",
+      scripts: [
+        .pre(
+          script: "find AIChat -name '*.swift' | xargs -n1 xcrun swift-format format -i",
+          name: "Swift Format",
+          basedOnDependencyAnalysis: false
+        ),
+        .pre(
+          script: "find AIChat -name '*.swift' | xargs -n1 swiftlint --fix",
+          name: "Swift Lint Fix",
+          basedOnDependencyAnalysis: false
+        ),
+        .pre(
+          script: "find AIChat -name '*.swift' | xargs -n1 swiftlint lint",
+          name: "Swift Lint",
+          basedOnDependencyAnalysis: false
+        ),
+        .pre(
+          script: "periphery scan --format xcode",
+          name: "Dead Code Scan",
+          basedOnDependencyAnalysis: false
+        ),
+      ]
+    ),
   ],
   schemes: [
     .scheme(
@@ -69,6 +85,13 @@ let project = Project(
         runPostActionsOnFailure: true
       ),
       runAction: .runAction(configuration: "Debug")
-    )
+    ),
+    .scheme(
+      name: "Code_Quality",
+      shared: true,
+      buildAction: .buildAction(
+        targets: ["Code_Quality"]
+      )
+    ),
   ]
 )

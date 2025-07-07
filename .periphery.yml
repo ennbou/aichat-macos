@@ -1,0 +1,5 @@
+project: AIChat.xcworkspace
+schemes:
+- AIChat
+- Networking
+- Storage
