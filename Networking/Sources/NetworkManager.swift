@@ -5,7 +5,12 @@ import Foundation
 public class NetworkManager {
   public static let shared = NetworkManager()
 
-  private init() {}
+  public init() {}
+  
+  // This method allows us to override the URLSession in tests
+  func getURLSession() -> URLSession {
+    return URLSession.shared
+  }
 
   public func request<T: Decodable>(
     url: URL,
@@ -22,7 +27,7 @@ public class NetworkManager {
       request.addValue(value, forHTTPHeaderField: key)
     }
 
-    URLSession.shared
+    getURLSession()
       .dataTask(with: request) { data, response, error in
         if let error = error {
           completion(.failure(.requestFailed(error)))
@@ -69,7 +74,7 @@ public class NetworkManager {
       request.addValue(value, forHTTPHeaderField: key)
     }
 
-    URLSession.shared
+    getURLSession()
       .dataTask(with: request) { data, response, error in
         if let error = error {
           completion(.failure(.requestFailed(error)))
@@ -105,12 +110,30 @@ public enum HTTPMethod: String {
   case patch = "PATCH"
 }
 
-public enum NetworkError: Error {
+public enum NetworkError: Error, Equatable {
   case requestFailed(Error)
   case invalidResponse
   case invalidStatusCode(Int)
   case noData
   case decodingFailed(Error)
+  
+  public static func == (lhs: NetworkError, rhs: NetworkError) -> Bool {
+    switch (lhs, rhs) {
+    case (.invalidResponse, .invalidResponse):
+      return true
+    case (.invalidStatusCode(let lhsCode), .invalidStatusCode(let rhsCode)):
+      return lhsCode == rhsCode
+    case (.noData, .noData):
+      return true
+    // For error types that contain other errors, we cannot easily compare them
+    // as Error doesn't conform to Equatable
+    case (.requestFailed, .requestFailed),
+         (.decodingFailed, .decodingFailed):
+      return false
+    default:
+      return false
+    }
+  }
 
   public var localizedDescription: String {
     switch self {
