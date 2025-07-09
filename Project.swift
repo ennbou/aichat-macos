@@ -65,7 +65,7 @@ let project = Project(
           basedOnDependencyAnalysis: false
         ),
         .pre(
-          script: "tuist graph --format png --output-path graph.png --no-open",
+          script: "tuist graph --format png --output-path ./ --no-open",
           name: "Generate Dependency Graph",
           basedOnDependencyAnalysis: false
         ),
