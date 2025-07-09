@@ -1,3 +1,5 @@
+![Code Coverage](https://img.shields.io/badge/Code%20Coverage-70.50%25-brightgreen)
+
 # Networking Module
 
 The Networking module provides a robust API communication layer for the AIChat application. It handles API requests, response parsing, and error management in a clean, testable architecture.
