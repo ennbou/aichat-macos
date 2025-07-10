@@ -177,11 +177,22 @@ test-networking:
 test-storage:
 	@echo "$(YELLOW)Running tests for Storage module...$(NC)"
 	@export PATH="$$HOME/.local/bin:$$PATH"; \
-	eval "$$($$HOME/.local/bin/mise activate zsh)"; \
-	cd $(STORAGE_MODULE); \
-	rm -rf ./build || true; \
-	tuist test --result-bundle-path ./build
-	@echo "$(GREEN)Storage tests completed$(NC)"
+	rm -rf ./build/$(STORAGE_MODULE)/test || true; \
+	tuist test $(STORAGE_MODULE) --result-bundle-path ./build/$(STORAGE_MODULE)/test
+	@echo "$(YELLOW)Extracting code coverage for Storage...$(NC)"
+	@XCRESULT="./build/$(STORAGE_MODULE)/test.xcresult"; \
+	if [ -n "$$XCRESULT" ]; then \
+		echo "Found xcresult at $$XCRESULT"; \
+		CC=$$(xcrun xccov view --report "$$XCRESULT" | grep "Storage.framework" | awk "{print \$$2}" | sed 's/%//'); \
+		echo "$(GREEN)Storage Code Coverage: $$CC%$(NC)"; \
+		if [ -f "$(STORAGE_MODULE)/README.md" ]; then \
+			sed -i '' "s/-[0-9][0-9]*\.*[0-9]*%25/-$$CC%25/" $(STORAGE_MODULE)/README.md; \
+		fi; \
+		echo "$(GREEN)Code coverage updated in README.md$(NC)"; \
+	else \
+		echo "$(RED)No xcresult bundle found in build directory$(NC)"; \
+	fi
+	@echo "$(GREEN)Networking tests completed$(NC)"
 
 # Test AIChat target
 .PHONY: test-aichat
@@ -261,3 +272,34 @@ dev: prepare install generate graph
 .PHONY: clean-and-retest-networking
 clean-and-retest-networking: clean install generate test-networking
 	@echo "$(YELLOW)Cleaning and re-testing the networking...$(NC)"
+
+
+# Formatting
+.PHONY: format-aichat
+format-aichat:
+	@echo "$(YELLOW)Running code formatting...$(NC)"
+	@echo "Formatting AIChat..."
+	@find AIChat -name '*.swift' | xargs -n1 xcrun swift-format format -i
+	@echo "$(GREEN)AIChat formatted successfully$(NC)"
+	@echo "Formatting AIChat module Done"
+
+.PHONY: format-networking
+format-networking:
+	@echo "$(YELLOW)Running code formatting...$(NC)"
+	@echo "Formatting Networking module sources..."
+	@find Networking/Sources -name '*.swift' | xargs -n1 xcrun swift-format format -i
+	@find Networking/Tests -name '*.swift' | xargs -n1 xcrun swift-format format -i
+	@echo "$(GREEN)Networking module formatted successfully$(NC)"
+
+.PHONY: format-storage
+format-storage:
+	@echo "$(YELLOW)Running code formatting...$(NC)"
+	@echo "Formatting Storage module ..."
+	@find Storage/Sources -name '*.swift' | xargs -n1 xcrun swift-format format -i
+	@find Storage/Tests -name '*.swift' | xargs -n1 xcrun swift-format format -i
+	@echo "$(GREEN)Storage module formatted successfully$(NC)"
+
+# Format all modules
+.PHONY: format-all
+format-all: format-aichat format-networking format-storage
+	@echo "$(GREEN)All modules formatted successfully$(NC)"

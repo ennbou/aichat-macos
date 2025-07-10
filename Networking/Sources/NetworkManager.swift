@@ -6,7 +6,7 @@ public class NetworkManager {
   public static let shared = NetworkManager()
 
   public init() {}
-  
+
   // This method allows us to override the URLSession in tests
   func getURLSession() -> URLSession {
     return URLSession.shared
@@ -75,7 +75,7 @@ public enum NetworkError: Error, Equatable {
   case invalidStatusCode(Int)
   case noData
   case decodingFailed(Error)
-  
+
   public static func == (lhs: NetworkError, rhs: NetworkError) -> Bool {
     switch (lhs, rhs) {
     case (.invalidResponse, .invalidResponse):
@@ -87,7 +87,7 @@ public enum NetworkError: Error, Equatable {
     // For error types that contain other errors, we cannot easily compare them
     // as Error doesn't conform to Equatable
     case (.requestFailed, .requestFailed),
-         (.decodingFailed, .decodingFailed):
+      (.decodingFailed, .decodingFailed):
       return false
     default:
       return false

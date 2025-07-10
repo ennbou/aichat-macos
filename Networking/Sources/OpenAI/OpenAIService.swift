@@ -2,7 +2,7 @@ import Foundation
 
 class OpenAIService: OpenAIServiceProtocol {
   private let networkManager: NetworkManager
-  
+
   public init(networkManager: NetworkManager = NetworkManager.shared) {
     self.networkManager = networkManager
   }

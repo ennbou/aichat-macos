@@ -6,13 +6,13 @@ public protocol OpenAIServiceProtocol {
     request: OpenAIChatRequest,
     completion: @escaping (Result<OpenAIChatResponse, NetworkError>) -> Void
   )
-  
+
   @available(macOS 12.0, *)
   func sendChatRequest(
     apiKey: String,
     request: OpenAIChatRequest
   ) async throws -> OpenAIChatResponse
-  
+
   func createChatRequest(
     userQuery: String,
     model: String,
