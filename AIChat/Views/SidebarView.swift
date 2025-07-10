@@ -151,12 +151,6 @@ struct SidebarView: View {
     }
   }
 
-  private func formatDate(_ date: Date) -> String {
-    let formatter = RelativeDateTimeFormatter()
-    formatter.unitsStyle = .short
-    return formatter.localizedString(for: date, relativeTo: Date())
-  }
-
   private func createNewChat() {
     // Check if there's already an empty chat session
     if let emptySession = chatRepository.chatSessions.first(where: { $0.isEmpty }) {

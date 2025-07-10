@@ -9,7 +9,6 @@ class MockNetworkManager: NetworkManager {
     var capturedURL: URL?
     var capturedMethod: HTTPMethod?
     var capturedHeaders: [String: String]?
-    var capturedBody: Data?
     
     // Response control
     var mockResponse: Any?
@@ -27,7 +26,6 @@ class MockNetworkManager: NetworkManager {
         capturedURL = url
         capturedMethod = method
         capturedHeaders = headers
-        capturedBody = body
         
         // Return mock result
         if let error = mockError {
@@ -44,33 +42,6 @@ class MockNetworkManager: NetworkManager {
             } catch {
                 completion(.failure(.decodingFailed(error)))
             }
-        } else {
-            completion(.failure(.noData))
-        }
-    }
-    
-    // Data request override
-    override func request(
-        url: URL,
-        method: HTTPMethod = .get,
-        headers: [String: String] = [:],
-        body: Data? = nil,
-        completion: @escaping (Result<Data, NetworkError>) -> Void
-    ) {
-        // Capture request details
-        capturedURL = url
-        capturedMethod = method
-        capturedHeaders = headers
-        capturedBody = body
-        
-        // Return mock result
-        if let error = mockError {
-            completion(.failure(error))
-            return
-        }
-        
-        if let response = mockResponse as? Data {
-            completion(.success(response))
         } else {
             completion(.failure(.noData))
         }

@@ -29,7 +29,8 @@ final class NetworkErrorTests {
         let decodingFailedError = NetworkError.decodingFailed(decodingError)
         #expect(decodingFailedError.localizedDescription == "Failed to decode response: Key not found")
     }
-    
+
+    @Test 
     func testEquatableConformance() {
         // Test that NetworkError conforms to Equatable correctly
         

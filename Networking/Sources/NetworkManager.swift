@@ -59,47 +59,6 @@ public class NetworkManager {
       .resume()
   }
 
-  public func request(
-    url: URL,
-    method: HTTPMethod = .get,
-    headers: [String: String] = [:],
-    body: Data? = nil,
-    completion: @escaping (Result<Data, NetworkError>) -> Void
-  ) {
-    var request = URLRequest(url: url)
-    request.httpMethod = method.rawValue
-    request.httpBody = body
-
-    headers.forEach { key, value in
-      request.addValue(value, forHTTPHeaderField: key)
-    }
-
-    getURLSession()
-      .dataTask(with: request) { data, response, error in
-        if let error = error {
-          completion(.failure(.requestFailed(error)))
-          return
-        }
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-          completion(.failure(.invalidResponse))
-          return
-        }
-
-        guard (200...299).contains(httpResponse.statusCode) else {
-          completion(.failure(.invalidStatusCode(httpResponse.statusCode)))
-          return
-        }
-
-        guard let data = data else {
-          completion(.failure(.noData))
-          return
-        }
-
-        completion(.success(data))
-      }
-      .resume()
-  }
 }
 
 public enum HTTPMethod: String {

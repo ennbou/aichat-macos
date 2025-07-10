@@ -1,13 +1,13 @@
 import Foundation
 
-public class OpenAIService: OpenAIServiceProtocol {
+class OpenAIService: OpenAIServiceProtocol {
   private let networkManager: NetworkManager
   
   public init(networkManager: NetworkManager = NetworkManager.shared) {
     self.networkManager = networkManager
   }
-  
-  public func sendChatRequest(
+
+  func sendChatRequest(
     apiKey: String,
     request: OpenAIChatRequest,
     completion: @escaping (Result<OpenAIChatResponse, NetworkError>) -> Void
@@ -38,7 +38,7 @@ public class OpenAIService: OpenAIServiceProtocol {
   }
 
   @available(macOS 12.0, *)
-  public func sendChatRequest(
+  func sendChatRequest(
     apiKey: String,
     request: OpenAIChatRequest
   ) async throws -> OpenAIChatResponse {
@@ -54,7 +54,7 @@ public class OpenAIService: OpenAIServiceProtocol {
     }
   }
 
-  public func createChatRequest(
+  func createChatRequest(
     userQuery: String,
     model: String = "gpt-3.5-turbo",
     systemPrompt: String? = nil,

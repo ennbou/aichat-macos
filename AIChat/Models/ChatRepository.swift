@@ -54,6 +54,7 @@ class ChatRepository: ObservableObject {
 
   // MARK: - Message Operations
 
+  @discardableResult
   func addMessage(
     content: String,
     isUserMessage: Bool,
@@ -68,10 +69,6 @@ class ChatRepository: ObservableObject {
 
   func getAllSessions(sortBy: [SortDescriptor<ChatSessionModel>]? = nil) -> [ChatSessionModel] {
     return sessionRepository.fetchAll(sortBy: sortBy)
-  }
-
-  func findSession(byId id: UUID) -> ChatSessionModel? {
-    return sessionRepository.find(byId: id)
   }
 
   // MARK: - Data Refresh
