@@ -126,7 +126,6 @@ struct SidebarView: View {
       chatRepository.refreshSessions()
     }
     .onChange(of: selectedChatSession) { oldValue, newValue in
-      print("test")
       if oldValue != newValue {
         // Only refresh when selection actually changes
         chatRepository.refreshSessions()
