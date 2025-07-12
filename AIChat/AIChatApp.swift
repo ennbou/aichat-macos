@@ -4,7 +4,6 @@
 //
 //  Created by Bouch on 6/25/25.
 //
-
 import Storage
 import SwiftUI
 
@@ -13,13 +12,13 @@ struct AIChatApp: App {
   // Use the SwiftDataManager from Storage module
   let swiftDataManager = StorageFactory.shared.swiftDataManager
   @State private var databaseErrorOccurred = false
+  @Environment(\.openWindow) private var openWindow
 
   var body: some Scene {
     WindowGroup {
       ChatScreen()
         .modelContainer(swiftDataManager.modelContainer)
         .onAppear {
-          // Verify database health when app appears
           if !swiftDataManager.checkDatabaseHealth() {
             databaseErrorOccurred = true
           }
@@ -38,6 +37,14 @@ struct AIChatApp: App {
             "There was an issue with the database. You can reset the database or continue with potential issues."
           )
         }
+    }
+    .commands {
+      CommandGroup(replacing: .appSettings) {
+        Button("Settings...") {
+          openWindow(id: "settings", value: "settings")
+        }
+        .keyboardShortcut(",", modifiers: .command)
+      }
     }
 
     WindowGroup(id: "settings", for: String.self) { _ in
