@@ -21,7 +21,7 @@ struct SettingScreen: View {
             Image(systemName: "lock.shield")
               .foregroundColor(.secondary)
               .frame(width: 16, height: 16)
-            
+
             if isAPIKeyVisible {
               TextField("OpenAI API Key", text: $openaiApiKey)
                 .textFieldStyle(.roundedBorder)
@@ -29,14 +29,17 @@ struct SettingScreen: View {
               SecureField("OpenAI API Key", text: $openaiApiKey)
                 .textFieldStyle(.roundedBorder)
             }
-            
-            Button(action: {
-              isAPIKeyVisible.toggle()
-            }) {
-              Image(systemName: isAPIKeyVisible ? "eye.slash" : "eye")
-                .foregroundColor(.secondary)
-                .frame(width: 16, height: 16)
-            }
+
+            Button(
+              action: {
+                isAPIKeyVisible.toggle()
+              },
+              label: {
+                Image(systemName: isAPIKeyVisible ? "eye.slash" : "eye")
+                  .foregroundColor(.secondary)
+                  .frame(width: 16, height: 16)
+              }
+            )
             .buttonStyle(.plain)
           }
         }

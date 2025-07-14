@@ -5,12 +5,13 @@
 //  Created by Bouch on 6/25/25.
 //
 import Storage
+import SwiftData
 import SwiftUI
 
 @main
 struct AIChatApp: App {
   // Use the SwiftDataManager from Storage module
-  let swiftDataManager = StorageFactory.shared.swiftDataManager
+  let swiftDataManager = SwiftDataManager.shared
   @State private var databaseErrorOccurred = false
   @Environment(\.openWindow) private var openWindow
 
@@ -26,7 +27,7 @@ struct AIChatApp: App {
         .alert("Database Error", isPresented: $databaseErrorOccurred) {
           Button("Reset Database") {
             // Reset the database if there's an error
-            ChatRepository.shared.resetDatabase()
+            swiftDataManager.resetDatabase()
             databaseErrorOccurred = false
           }
           Button("Continue Anyway", role: .cancel) {

@@ -123,13 +123,11 @@ final class NetworkManagerTests {
       }
       sleep(1)
     }
-
   }
 
   @Test(.timeLimit(.minutes(1)))
   func testRequestFailureInvalidStatusCode() async {
     await confirmation("Request should fail with invalid status code") { requestCalled in
-
       let testURL = URL(string: "https://api.example.com/test")!
       let testData = "Error message".data(using: .utf8)!
 
@@ -326,6 +324,5 @@ final class NetworkManagerTests {
       }
       sleep(1)
     }
-
   }
 }

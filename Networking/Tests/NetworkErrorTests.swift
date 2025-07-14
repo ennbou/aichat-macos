@@ -4,7 +4,6 @@ import Testing
 @testable import Networking
 
 final class NetworkErrorTests {
-
   @Test func testLocalizedDescription() {
     // Test all error cases to ensure they provide descriptive error messages
 

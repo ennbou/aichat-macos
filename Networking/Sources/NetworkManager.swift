@@ -58,7 +58,6 @@ public class NetworkManager {
       }
       .resume()
   }
-
 }
 
 public enum HTTPMethod: String {

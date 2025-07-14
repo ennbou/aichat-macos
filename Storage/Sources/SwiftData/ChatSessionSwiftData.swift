@@ -1,8 +1,18 @@
 import Foundation
 import SwiftData
 
+public protocol ChatSessionRepositoryProtocol {
+  func save(_ chatSession: ChatSessionModel)
+  func update(_ chatSession: ChatSessionModel)
+  func delete(_ chatSession: ChatSessionModel)
+  func fetchAll(sortBy: [SortDescriptor<ChatSessionModel>]?) -> [ChatSessionModel]
+  func resetDatabase()
+  func addMessage(_ message: MessageModel, to chatSession: ChatSessionModel)
+  func find(byId id: UUID) -> ChatSessionModel?
+}
+
 /// Repository for managing ChatSession models
-public class ChatSessionRepository {
+public class ChatSessionSwiftData: ChatSessionRepositoryProtocol {
   private let swiftDataManager: SwiftDataManager
 
   /// Initialize with a SwiftData manager
@@ -56,5 +66,9 @@ public class ChatSessionRepository {
     chatSession.messages.append(message)
     chatSession.lastModifiedAt = Date()
     swiftDataManager.saveContext()
+  }
+
+  public func resetDatabase() {
+    swiftDataManager.resetDatabase()
   }
 }

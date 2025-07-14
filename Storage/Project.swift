@@ -8,8 +8,8 @@ let project = Project(
     disableSynthesizedResourceAccessors: false
   ),
   settings: .settings(configurations: [
-      .debug(name: "Debug"),
-      .release(name: "Release"),
+    .debug(name: "Debug"),
+    .release(name: "Release"),
   ]),
   targets: [
     .target(
@@ -38,19 +38,19 @@ let project = Project(
     ),
   ],
   schemes: [
-      .scheme(
-          name: "Storage",
-          shared: true,
-          buildAction: .buildAction(targets: ["Storage"]),
-          testAction: .targets(
-              ["StorageTests"],
-              configuration: "Debug",
-              options: .options(coverage: true, codeCoverageTargets: ["Storage"])
-          ),
-          runAction: .runAction(configuration: "Debug"),
-          archiveAction: .archiveAction(configuration: "Release"),
-          profileAction: .profileAction(configuration: "Release"),
-          analyzeAction: .analyzeAction(configuration: "Debug")
-      )
+    .scheme(
+      name: "Storage",
+      shared: true,
+      buildAction: .buildAction(targets: ["Storage"]),
+      testAction: .targets(
+        ["StorageTests"],
+        configuration: "Debug",
+        options: .options(coverage: true, codeCoverageTargets: ["Storage"])
+      ),
+      runAction: .runAction(configuration: "Debug"),
+      archiveAction: .archiveAction(configuration: "Release"),
+      profileAction: .profileAction(configuration: "Release"),
+      analyzeAction: .analyzeAction(configuration: "Debug")
+    )
   ]
 )

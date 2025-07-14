@@ -102,7 +102,6 @@ final class OpenAIServiceTests {
   @Test(.timeLimit(.minutes(1)))
   func testSendChatRequest() async {
     await confirmation("OpenAIService should return a response") { requestCalled in
-
       let apiKey = "test-api-key"
       let chatRequest = OpenAIChatRequest(
         model: "gpt-3.5-turbo",
@@ -145,7 +144,6 @@ final class OpenAIServiceTests {
         }
       }
     }
-
   }
 
   @Test(.timeLimit(.minutes(1)))
@@ -256,15 +254,6 @@ final class OpenAIServiceTests {
   func testSendChatRequestWithInvalidURL() async {
     // Create a subclass of OpenAIService that returns an invalid URL
     class InvalidURLOpenAIService: OpenAIService {
-      override func sendChatRequest(
-        apiKey: String,
-        request: OpenAIChatRequest,
-        completion: @escaping (Result<OpenAIChatResponse, NetworkError>) -> Void
-      ) {
-        // This will trigger the invalid URL path in the parent class
-        // by passing through to the super implementation with a URL override
-        super.sendChatRequest(apiKey: apiKey, request: request, completion: completion)
-      }
     }
 
     // Setup the service with the mock network manager

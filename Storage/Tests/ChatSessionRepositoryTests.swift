@@ -4,13 +4,13 @@ import Testing
 @testable import Storage
 
 final class ChatSessionRepositoryTests {
-  var sut: ChatSessionRepository!
+  var sut: ChatSessionRepositoryProtocol!
   var swiftDataManager: SwiftDataManager!
 
   init() {
     // Create an in-memory SwiftDataManager for testing
     swiftDataManager = createInMemorySwiftDataManager()
-    sut = ChatSessionRepository(swiftDataManager: swiftDataManager)
+    sut = ChatSessionSwiftData(swiftDataManager: swiftDataManager)
   }
 
   deinit {
@@ -117,5 +117,11 @@ final class ChatSessionRepositoryTests {
     // Then
     #expect(fetchedSession?.messages.count == 1)
     #expect(fetchedSession?.messages.first?.content == "New message")
+  }
+}
+
+extension ChatSessionRepositoryProtocol {
+  func fetchAll() -> [ChatSessionModel] {
+    self.fetchAll(sortBy: nil)
   }
 }

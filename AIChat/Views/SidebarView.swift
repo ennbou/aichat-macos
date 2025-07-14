@@ -10,7 +10,7 @@ import SwiftUI
 
 struct SidebarView: View {
   // Using our ChatRepository instead of direct SwiftData queries
-  @StateObject private var chatRepository = ChatRepository.shared
+  @StateObject private var chatRepository = ChatLocalStorage.shared
   @Binding var selectedChatSession: ChatSessionModel?
 
   @Environment(\.openWindow) private var openWindow

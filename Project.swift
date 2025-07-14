@@ -45,17 +45,17 @@ let project = Project(
       bundleId: "com.ennbou.AIChat.code.quality",
       scripts: [
         .pre(
-          script: "find AIChat -name '*.swift' | xargs -n1 xcrun swift-format format -i",
+          script: "git ls-files '*.swift' | xargs -n1 xcrun swift-format format -i",
           name: "Swift Format",
           basedOnDependencyAnalysis: false
         ),
         .pre(
-          script: "find AIChat -name '*.swift' | xargs -n1 swiftlint --fix",
+          script: "git ls-files '*.swift' | xargs -n1 swiftlint --fix",
           name: "Swift Lint Fix",
           basedOnDependencyAnalysis: false
         ),
         .pre(
-          script: "find AIChat -name '*.swift' | xargs -n1 swiftlint lint",
+          script: "git ls-files '*.swift' | xargs -n1 swiftlint lint",
           name: "Swift Lint",
           basedOnDependencyAnalysis: false
         ),
@@ -65,7 +65,7 @@ let project = Project(
           basedOnDependencyAnalysis: false
         ),
         .pre(
-          script: "tuist graph --format png --output-path ./ --no-open",
+          script: "true || tuist graph --format png --output-path ./ --no-open",
           name: "Generate Dependency Graph",
           basedOnDependencyAnalysis: false
         ),

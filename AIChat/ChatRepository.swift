@@ -5,28 +5,34 @@
 //  Created on 7/4/25.
 //
 
-import Combine
 import Foundation
 import Storage
 
-/// A helper class that bridges between the AIChat app and the Storage module
-class ChatRepository: ObservableObject {
-  static let shared = ChatRepository()
+protocol ChatRepositoryProtocol: ObservableObject {
+  func createSession(title: String) -> ChatSessionModel
+  func deleteSession(_ session: ChatSessionModel)
+  func updateSession(_ session: ChatSessionModel)
+  func addMessage(
+    content: String,
+    isUserMessage: Bool,
+    to session: ChatSessionModel
+  ) -> MessageModel
+  func getAllSessions(sortBy: [SortDescriptor<ChatSessionModel>]?) -> [ChatSessionModel]
+  func refreshSessions()
+}
 
-  private let sessionRepository: ChatSessionRepository
-  private let swiftDataManager: SwiftDataManager
+/// A helper class that bridges between the AIChat app and the Storage module
+class ChatLocalStorage: ChatRepositoryProtocol {
+  static let shared = ChatLocalStorage()
+
+  private let sessionRepository: ChatSessionRepositoryProtocol
 
   @Published var chatSessions: [ChatSessionModel] = []
 
   init(
-    sessionRepository: ChatSessionRepository = ChatSessionRepository(),
-    swiftDataManager: SwiftDataManager = StorageFactory.shared.swiftDataManager
+    sessionRepository: ChatSessionRepositoryProtocol = ChatSessionSwiftData()
   ) {
     self.sessionRepository = sessionRepository
-    self.swiftDataManager = swiftDataManager
-
-    // Load sessions initially
-    refreshSessions()
   }
 
   // MARK: - Chat Session Operations
@@ -82,7 +88,7 @@ class ChatRepository: ObservableObject {
   /// Reset and rebuild the database - for use in cases of severe migration errors
   func resetDatabase() {
     // Reset the database
-    swiftDataManager.resetDatabase()
+    sessionRepository.resetDatabase()
 
     // Refresh with empty data
     refreshSessions()
