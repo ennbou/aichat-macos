@@ -1,10 +1,3 @@
-//
-//  EmptyChat.swift
-//  AIChat
-//
-//  Created by Bouch on 7/14/25.
-//
-
 import SwiftUI
 
 struct EmptyStateView: View {

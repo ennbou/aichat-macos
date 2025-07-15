@@ -1,9 +1,3 @@
-//
-//  AIChatApp.swift
-//  AIChat
-//
-//  Created by Bouch on 6/25/25.
-//
 import Storage
 import SwiftData
 import SwiftUI

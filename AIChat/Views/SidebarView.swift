@@ -1,10 +1,3 @@
-//
-//  SidebarView.swift
-//  AIChat
-//
-//  Created by Bouch on 6/25/25.
-//
-
 import Storage
 import SwiftUI
 

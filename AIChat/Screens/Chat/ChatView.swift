@@ -1,10 +1,3 @@
-//
-//  ChatView.swift
-//  AIChat
-//
-//  Created by Bouch on 7/14/25.
-//
-
 import Networking
 import Storage
 import SwiftUI

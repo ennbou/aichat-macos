@@ -1,10 +1,3 @@
-//
-//  SettingsView.swift
-//  AIChat
-//
-//  Created by Bouch on 6/25/25.
-//
-
 import AppKit
 import SwiftUI
 

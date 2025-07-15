@@ -1,16 +1,8 @@
-//
-//  ContentView.swift
-//  AIChat
-//
-//  Created by Bouch on 6/25/25.
-//
-
 import MarkdownUI
 import Storage
 import SwiftUI
 
 struct ChatScreen: View {
-  // Using our ChatRepository instead of direct SwiftData queries
   @StateObject private var chatRepository = ChatLocalStorage.shared
   @State private var selectedChatSession: ChatSessionModel?
 
@@ -20,7 +12,7 @@ struct ChatScreen: View {
     } detail: {
       if let session = selectedChatSession {
         ChatView(chatSession: session)
-          .id(session.id)  // Force view recreation when session changes
+          .id(session.id)
       } else {
         EmptyStateView()
       }
@@ -28,9 +20,6 @@ struct ChatScreen: View {
     .onAppear {
       chatRepository.refreshSessions()
       ensureSelectedChatSession()
-    }
-    .onChange(of: selectedChatSession) { oldSession, newSession in
-      handleSessionChange(oldSession: oldSession, newSession: newSession)
     }
   }
 
@@ -46,18 +35,6 @@ struct ChatScreen: View {
         let newSession = chatRepository.createSession(title: "New Chat")
         selectedChatSession = newSession
       }
-    }
-  }
-
-  private func handleSessionChange(oldSession: ChatSessionModel?, newSession: ChatSessionModel?) {
-    if let oldSession = oldSession, oldSession.isEmpty, newSession != oldSession {
-      //      let otherEmptySessions = chatRepository.chatSessions.filter {
-      //        $0.isEmpty && $0.id != oldSession.id
-      //      }
-      //      if !otherEmptySessions.isEmpty, let newSession = newSession, !newSession.isEmpty {
-      //        chatRepository.deleteSession(oldSession)
-      //        chatRepository.refreshSessions()
-      //      }
     }
   }
 }

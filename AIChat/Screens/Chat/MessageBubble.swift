@@ -1,10 +1,3 @@
-//
-//  MessageBubble.swift
-//  AIChat
-//
-//  Created by Bouch on 7/14/25.
-//
-
 import MarkdownUI
 import Storage
 import SwiftUI

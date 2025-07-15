@@ -1,10 +1,3 @@
-//
-//  ChatModel.swift
-//  Storage
-//
-//  Created by Bouch on 7/14/25.
-//
-
 import Foundation
 import SwiftData
 
