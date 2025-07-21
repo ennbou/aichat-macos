@@ -231,6 +231,12 @@ quality:
 	tuist build Code_Quality
 	@echo "$(GREEN)Code quality checks completed$(NC)"
 
+.PHONY: format-code
+format-code:
+	@echo "$(YELLOW)Running code formatting...$(NC)"
+	@git ls-files '*.swift' | xargs -n1 xcrun swift-format format -i
+	@echo "$(GREEN)Code formatting completed$(NC)"
+
 # Show project status
 .PHONY: status
 status:
