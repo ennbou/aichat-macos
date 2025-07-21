@@ -3,7 +3,7 @@ import Storage
 import SwiftUI
 
 struct ChatView: View {
-  @StateObject private var chatRepository = ChatLocalStorage.shared
+  @Environment(\.chatRepository) var chatRepository: any ChatRepositoryProtocol
   var chatSession: ChatSessionModel
   @State private var messageText = ""
   @State private var isGeneratingResponse = false

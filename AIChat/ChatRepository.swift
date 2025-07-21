@@ -1,7 +1,9 @@
 import Foundation
+import Observation
 import Storage
 
 protocol ChatRepositoryProtocol: ObservableObject {
+  var chatSessions: [ChatSessionModel] { get set }
   func createSession(title: String) -> ChatSessionModel
   func deleteSession(_ session: ChatSessionModel)
   func updateSession(_ session: ChatSessionModel)
@@ -14,13 +16,13 @@ protocol ChatRepositoryProtocol: ObservableObject {
   func refreshSessions()
 }
 
-/// A helper class that bridges between the AIChat app and the Storage module
+@Observable
 class ChatLocalStorage: ChatRepositoryProtocol {
   static let shared = ChatLocalStorage()
 
   private let sessionRepository: ChatSessionRepositoryProtocol
 
-  @Published var chatSessions: [ChatSessionModel] = []
+  var chatSessions: [ChatSessionModel] = []
 
   init(
     sessionRepository: ChatSessionRepositoryProtocol = ChatSessionSwiftData()
@@ -33,21 +35,18 @@ class ChatLocalStorage: ChatRepositoryProtocol {
   func createSession(title: String) -> ChatSessionModel {
     let session = ChatSessionModel(title: title)
     sessionRepository.save(session)
-    // Immediately refresh the sessions list to update UI
     refreshSessions()
     return session
   }
 
   func deleteSession(_ session: ChatSessionModel) {
     sessionRepository.delete(session)
-    // Immediately refresh the sessions list to update UI
     refreshSessions()
   }
 
   func updateSession(_ session: ChatSessionModel) {
     session.lastModifiedAt = Date()
     sessionRepository.update(session)
-    // Immediately refresh the sessions list to update UI
     refreshSessions()
   }
 

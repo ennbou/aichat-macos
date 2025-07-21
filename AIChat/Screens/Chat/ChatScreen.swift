@@ -2,8 +2,19 @@ import MarkdownUI
 import Storage
 import SwiftUI
 
+private struct ChatRepositoryKey: EnvironmentKey {
+  static let defaultValue: any ChatRepositoryProtocol = ChatLocalStorage.shared
+}
+
+extension EnvironmentValues {
+  var chatRepository: any ChatRepositoryProtocol {
+    get { self[ChatRepositoryKey.self] }
+    set { self[ChatRepositoryKey.self] = newValue }
+  }
+}
+
 struct ChatScreen: View {
-  @StateObject private var chatRepository = ChatLocalStorage.shared
+  @Environment(\.chatRepository) var chatRepository: any ChatRepositoryProtocol
   @State private var selectedChatSession: ChatSessionModel?
 
   var body: some View {
