@@ -2,52 +2,57 @@ import Foundation
 import Observation
 import Storage
 
-protocol ChatRepositoryProtocol: ObservableObject {
-  var chatSessions: [ChatSessionModel] { get set }
-  func createSession(title: String) -> ChatSessionModel
-  func deleteSession(_ session: ChatSessionModel)
-  func updateSession(_ session: ChatSessionModel)
-  func addMessage(
-    content: String,
-    isUserMessage: Bool,
-    to session: ChatSessionModel
-  ) -> MessageModel
+protocol ChatSessionRepositoryProtocol {
+  func create(chatSession: ChatSessionModel)
+  func delete(chatSession: ChatSessionModel) -> Bool
+  func update(chatSession: ChatSessionModel)
   func getAllSessions(sortBy: [SortDescriptor<ChatSessionModel>]?) -> [ChatSessionModel]
-  func refreshSessions()
 }
 
-@Observable
-class ChatLocalStorage: ChatRepositoryProtocol {
-  static let shared = ChatLocalStorage()
+extension ChatSessionRepositoryProtocol {
+  func getAllSessions(sortBy: [SortDescriptor<ChatSessionModel>]? = nil) -> [ChatSessionModel] {
+    getAllSessions(sortBy: nil)
+  }
 
-  private let sessionRepository: ChatSessionRepositoryProtocol
+}
 
-  var chatSessions: [ChatSessionModel] = []
+class ChatSessionLocalStorage: ChatSessionRepositoryProtocol {
+  static let shared = ChatSessionLocalStorage()
+
+  private let sessionRepository: ChatSessionStorageRepositoryProtocol
 
   init(
-    sessionRepository: ChatSessionRepositoryProtocol = ChatSessionSwiftData()
+    sessionRepository: ChatSessionStorageRepositoryProtocol = ChatSessionSwiftData()
   ) {
     self.sessionRepository = sessionRepository
   }
 
   // MARK: - Chat Session Operations
 
-  func createSession(title: String) -> ChatSessionModel {
-    let session = ChatSessionModel(title: title)
-    sessionRepository.save(session)
-    refreshSessions()
-    return session
+  func create(chatSession: ChatSessionModel) {
+    do {
+      try sessionRepository.save(chatSession: chatSession)
+    } catch {
+
+    }
   }
 
-  func deleteSession(_ session: ChatSessionModel) {
-    sessionRepository.delete(session)
-    refreshSessions()
+  func delete(chatSession: ChatSessionModel) -> Bool {
+    do {
+      try sessionRepository.delete(chatSession: chatSession)
+      return true
+    } catch {
+      return false
+    }
   }
 
-  func updateSession(_ session: ChatSessionModel) {
-    session.lastModifiedAt = Date()
-    sessionRepository.update(session)
-    refreshSessions()
+  func update(chatSession: ChatSessionModel) {
+    chatSession.lastModifiedAt = Date()
+    do {
+      try sessionRepository.update(chatSession: chatSession)
+    } catch {
+
+    }
   }
 
   // MARK: - Message Operations
@@ -72,7 +77,6 @@ class ChatLocalStorage: ChatRepositoryProtocol {
   // MARK: - Data Refresh
 
   func refreshSessions() {
-    chatSessions = getAllSessions()
   }
 
   // MARK: - Data Migration Helpers
@@ -86,9 +90,6 @@ class ChatLocalStorage: ChatRepositoryProtocol {
     refreshSessions()
 
     // Create a default session
-    _ = createSession(title: "New Chat")
-
-    // Refresh again to show the new session
-    refreshSessions()
+    create(chatSession: ChatSessionModel(title: "New Chat"))
   }
 }

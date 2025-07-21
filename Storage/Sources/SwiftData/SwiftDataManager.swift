@@ -1,8 +1,40 @@
 import Foundation
 import SwiftData
 
+public protocol DataManagerProtocol {
+  var mainContext: ModelContext { get }
+  func saveContext(_ context: ModelContext?) throws
+  func createNewContext() -> ModelContext
+  func fetch<T: PersistentModel>(
+    _ type: T.Type,
+    predicate: Predicate<T>?,
+    sortBy: [SortDescriptor<T>]?
+  ) throws -> [T]
+  func delete<T: PersistentModel>(_ model: T, in context: ModelContext?)
+  func deleteAll<T: PersistentModel>(_ type: T.Type) throws
+  func resetDatabase()
+}
+
+extension DataManagerProtocol {
+  public func saveContext(_ context: ModelContext? = nil) throws {
+    try saveContext(nil)
+  }
+
+  public func delete<T: PersistentModel>(_ model: T, in context: ModelContext? = nil) {
+    delete(model, in: nil)
+  }
+
+  public func fetch<T: PersistentModel>(
+    _ type: T.Type,
+    predicate: Predicate<T>? = nil,
+    sortBy: [SortDescriptor<T>]? = nil
+  ) throws -> [T] {
+    try fetch(type, predicate: nil, sortBy: nil)
+  }
+}
+
 /// Manager class for SwiftData operations
-public class SwiftDataManager {
+public class SwiftDataManager: DataManagerProtocol {
   /// The shared instance of the SwiftData manager
   public static var shared = SwiftDataManager()
 
@@ -87,24 +119,20 @@ public class SwiftDataManager {
   }
 
   /// Helper method to delete all models of a specific type
-  public func deleteAll<T: PersistentModel>(_ type: T.Type) {
-    do {
-      let items = try fetch(type)
-      for item in items {
-        delete(item)
-      }
-      saveContext()
-    } catch {
-      print("Error deleting all \(type): \(error)")
+  public func deleteAll<T: PersistentModel>(_ type: T.Type) throws {
+    let items = try fetch(type)
+    for item in items {
+      delete(item)
     }
+    saveContext()
   }
 
   /// Reset the database - useful during significant schema changes
   public func resetDatabase() {
     do {
       // First delete all existing data
-      deleteAll(ChatSessionModel.self)
-      deleteAll(MessageModel.self)
+      try deleteAll(ChatSessionModel.self)
+      try deleteAll(MessageModel.self)
 
       // Remove the persistent store
       try modelContainer.erase()

@@ -3,7 +3,7 @@ import Storage
 import SwiftUI
 
 struct ChatView: View {
-  @Environment(\.chatRepository) var chatRepository: any ChatRepositoryProtocol
+  @Environment(\.chatScreenVM) var chatScreenVM: ChatScreenVM
   var chatSession: ChatSessionModel
   @State private var messageText = ""
   @State private var isGeneratingResponse = false
@@ -110,14 +110,11 @@ struct ChatView: View {
     }
 
     // Use the repository to add the message
-    _ = chatRepository.addMessage(
+    _ = chatScreenVM.addMessage(
       content: trimmedMessage,
       isUserMessage: true,
       to: chatSession
     )
-
-    chatSession.updateLastActivity()
-    chatRepository.updateSession(chatSession)
 
     // Refresh messages
     loadMessages()
@@ -135,13 +132,12 @@ struct ChatView: View {
 
     // Show a placeholder message while waiting for OpenAI's response
     if apiKey.isEmpty {
-      _ = chatRepository.addMessage(
+      _ = chatScreenVM.addMessage(
         content: "Please set your OpenAI API key in the settings.",
         isUserMessage: false,
         to: chatSession
       )
-      chatSession.updateLastActivity()
-      chatRepository.updateSession(chatSession)
+
       loadMessages()
       return
     }
@@ -168,14 +164,14 @@ struct ChatView: View {
         case .success(let response):
           if let messageContent = response.firstMessage?.content {
             // Use repository to add AI response
-            self.chatRepository.addMessage(
+            self.chatScreenVM.addMessage(
               content: messageContent,
               isUserMessage: false,
               to: self.chatSession
             )
           } else {
             // Handle empty response
-            self.chatRepository.addMessage(
+            self.chatScreenVM.addMessage(
               content: "Received an empty response from the AI.",
               isUserMessage: false,
               to: self.chatSession
@@ -183,15 +179,13 @@ struct ChatView: View {
           }
         case .failure(let error):
           // Handle error
-          self.chatRepository.addMessage(
+          self.chatScreenVM.addMessage(
             content: "Error: \(error.localizedDescription)",
             isUserMessage: false,
             to: self.chatSession
           )
         }
 
-        self.chatSession.updateLastActivity()
-        self.chatRepository.updateSession(self.chatSession)
         // Refresh messages after receiving AI response
         self.loadMessages()
       }
@@ -201,8 +195,6 @@ struct ChatView: View {
   private func renameSession() {
     let firstMessage = messages.first(where: { $0.isUserMessage })?.content ?? ""
     let truncated = String(firstMessage.prefix(20))
-    chatSession.title =
-      truncated.isEmpty ? "Chat" : truncated + (truncated.count >= 20 ? "..." : "")
-    chatRepository.updateSession(chatSession)
+    chatScreenVM.set(chatSession: chatSession, title: truncated)
   }
 }

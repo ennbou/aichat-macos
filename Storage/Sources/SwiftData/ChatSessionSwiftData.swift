@@ -1,10 +1,11 @@
 import Foundation
 import SwiftData
 
-public protocol ChatSessionRepositoryProtocol {
-  func save(_ chatSession: ChatSessionModel)
-  func update(_ chatSession: ChatSessionModel)
-  func delete(_ chatSession: ChatSessionModel)
+public protocol ChatSessionStorageRepositoryProtocol {
+  var dataManager: DataManagerProtocol { get }
+  func save(chatSession: ChatSessionModel) throws
+  func update(chatSession: ChatSessionModel) throws
+  func delete(chatSession: ChatSessionModel) throws
   func fetchAll(sortBy: [SortDescriptor<ChatSessionModel>]?) -> [ChatSessionModel]
   func resetDatabase()
   func addMessage(_ message: MessageModel, to chatSession: ChatSessionModel)
@@ -12,37 +13,37 @@ public protocol ChatSessionRepositoryProtocol {
 }
 
 /// Repository for managing ChatSession models
-public class ChatSessionSwiftData: ChatSessionRepositoryProtocol {
-  private let swiftDataManager: SwiftDataManager
+public class ChatSessionSwiftData: ChatSessionStorageRepositoryProtocol {
+  public var dataManager: any DataManagerProtocol
 
   /// Initialize with a SwiftData manager
-  public init(swiftDataManager: SwiftDataManager = SwiftDataManager.shared) {
-    self.swiftDataManager = swiftDataManager
+  public init(dataManager: DataManagerProtocol = SwiftDataManager.shared) {
+    self.dataManager = dataManager
   }
 
   /// Save a new chat session
-  public func save(_ chatSession: ChatSessionModel) {
-    swiftDataManager.mainContext.insert(chatSession)
-    swiftDataManager.saveContext()
+  public func save(chatSession: ChatSessionModel) throws {
+    dataManager.mainContext.insert(chatSession)
+    try dataManager.saveContext()
   }
 
   /// Update an existing chat session
-  public func update(_ chatSession: ChatSessionModel) {
+  public func update(chatSession: ChatSessionModel) throws {
     chatSession.lastModifiedAt = Date()
-    swiftDataManager.saveContext()
+    try dataManager.saveContext()
   }
 
   /// Delete a chat session
-  public func delete(_ chatSession: ChatSessionModel) {
-    swiftDataManager.delete(chatSession)
-    swiftDataManager.saveContext()
+  public func delete(chatSession: ChatSessionModel) throws {
+    dataManager.delete(chatSession)
+    try dataManager.saveContext()
   }
 
   /// Fetch all chat sessions
   public func fetchAll(sortBy: [SortDescriptor<ChatSessionModel>]? = nil) -> [ChatSessionModel] {
     let defaultSort = [SortDescriptor(\ChatSessionModel.lastModifiedAt, order: .reverse)]
     do {
-      return try swiftDataManager.fetch(ChatSessionModel.self, sortBy: sortBy ?? defaultSort)
+      return try dataManager.fetch(ChatSessionModel.self, sortBy: sortBy ?? defaultSort)
     } catch {
       print("Error fetching chat sessions: \(error)")
       return []
@@ -53,7 +54,7 @@ public class ChatSessionSwiftData: ChatSessionRepositoryProtocol {
   public func find(byId id: UUID) -> ChatSessionModel? {
     let predicate = #Predicate<ChatSessionModel> { $0.id == id }
     do {
-      let results = try swiftDataManager.fetch(ChatSessionModel.self, predicate: predicate)
+      let results = try dataManager.fetch(ChatSessionModel.self, predicate: predicate)
       return results.first
     } catch {
       print("Error finding chat session: \(error)")
@@ -65,10 +66,10 @@ public class ChatSessionSwiftData: ChatSessionRepositoryProtocol {
   public func addMessage(_ message: MessageModel, to chatSession: ChatSessionModel) {
     chatSession.messages.append(message)
     chatSession.lastModifiedAt = Date()
-    swiftDataManager.saveContext()
+    try? dataManager.saveContext()
   }
 
   public func resetDatabase() {
-    swiftDataManager.resetDatabase()
+    dataManager.resetDatabase()
   }
 }

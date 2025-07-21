@@ -4,7 +4,7 @@ import Testing
 @testable import Storage
 
 final class ChatSessionRepositoryTests {
-  var sut: ChatSessionRepositoryProtocol!
+  var sut: ChatSessionStorageRepositoryProtocol!
   var swiftDataManager: SwiftDataManager!
 
   init() {
@@ -120,7 +120,7 @@ final class ChatSessionRepositoryTests {
   }
 }
 
-extension ChatSessionRepositoryProtocol {
+extension ChatSessionStorageRepositoryProtocol {
   func fetchAll() -> [ChatSessionModel] {
     self.fetchAll(sortBy: nil)
   }

@@ -2,19 +2,22 @@ import MarkdownUI
 import Storage
 import SwiftUI
 
-private struct ChatRepositoryKey: EnvironmentKey {
-  static let defaultValue: any ChatRepositoryProtocol = ChatLocalStorage.shared
+private struct ChatScreenVmKey: EnvironmentKey {
+  static let defaultValue = ChatScreenVM(
+    chatSessinoRepostiry: ChatSessionLocalStorage.shared,
+    allChatSessions: []
+  )
 }
 
 extension EnvironmentValues {
-  var chatRepository: any ChatRepositoryProtocol {
-    get { self[ChatRepositoryKey.self] }
-    set { self[ChatRepositoryKey.self] = newValue }
+  var chatScreenVM: ChatScreenVM {
+    get { self[ChatScreenVmKey.self] }
+    set { self[ChatScreenVmKey.self] = newValue }
   }
 }
 
 struct ChatScreen: View {
-  @Environment(\.chatRepository) var chatRepository: any ChatRepositoryProtocol
+  @Environment(\.chatScreenVM) var chatSecreenVM: ChatScreenVM
   @State private var selectedChatSession: ChatSessionModel?
 
   var body: some View {
@@ -29,23 +32,7 @@ struct ChatScreen: View {
       }
     }
     .onAppear {
-      chatRepository.refreshSessions()
-      ensureSelectedChatSession()
-    }
-  }
-
-  private func ensureSelectedChatSession() {
-    if selectedChatSession == nil {
-      // Use the repository's already loaded sessions
-      let sessions = chatRepository.chatSessions
-
-      if let firstSession = sessions.first {
-        selectedChatSession = firstSession
-      } else {
-        // Create a new session if none exist
-        let newSession = chatRepository.createSession(title: "New Chat")
-        selectedChatSession = newSession
-      }
+      chatSecreenVM.refreshSessions()
     }
   }
 }
