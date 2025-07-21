@@ -18,14 +18,13 @@ extension EnvironmentValues {
 
 struct ChatScreen: View {
   @Environment(\.chatScreenVM) var chatSecreenVM: ChatScreenVM
-  @State private var selectedChatSession: ChatSessionModel?
 
   var body: some View {
     NavigationSplitView {
-      SidebarView(selectedChatSession: $selectedChatSession)
+      SidebarView()
     } detail: {
-      if let session = selectedChatSession {
-        ChatView(chatSession: session)
+      if let session = chatSecreenVM.chatSession {
+        ChatView()
           .id(session.id)
       } else {
         EmptyStateView()
@@ -42,7 +41,6 @@ struct ChatScreen: View {
 }
 
 struct CustomTextFieldStyle: TextFieldStyle {
-  // swiftlint:disable:next identifier_name
   func _body(configuration: TextField<_Label>) -> some View {
     configuration
       .textFieldStyle(.plain)

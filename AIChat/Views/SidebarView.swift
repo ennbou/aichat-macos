@@ -2,10 +2,7 @@ import Storage
 import SwiftUI
 
 struct SidebarView: View {
-  // Using our ChatRepository instead of direct SwiftData queries
   @Environment(\.chatScreenVM) var chatScreenVM: ChatScreenVM
-  @Binding var selectedChatSession: ChatSessionModel?
-
   @Environment(\.openWindow) private var openWindow
 
   @State private var sessionToRename: ChatSessionModel?
@@ -14,7 +11,12 @@ struct SidebarView: View {
 
   var body: some View {
     VStack {
-      List(selection: $selectedChatSession) {
+      List(
+        selection: Binding(
+          get: { chatScreenVM.chatSession },
+          set: { chatScreenVM.selectChatSession($0) }
+        )
+      ) {
         ForEach(chatScreenVM.allChatSessions) { session in
           NavigationLink(value: session) {
             HStack {
@@ -41,50 +43,16 @@ struct SidebarView: View {
                 .padding(6)
                 .background(Color.gray.opacity(0.2))
                 .clipShape(Circle())
-              Menu {
-                Button(
-                  action: {
-                    print("")
-                  },
-                  label: {
-                    Label("Share", systemImage: "square.and.arrow.up")
-                  }
-                )
 
-                Button(
-                  action: { renameSession(session) },
-                  label: {
-                    Label("Rename", systemImage: "pencil")
-                  }
-                )
-
-                Button(
-                  action: { archiveSession(session) },
-                  label: {
-                    Label(
-                      session.isArchived ? "Unarchive" : "Archive",
-                      systemImage: session.isArchived ? "archivebox.fill" : "archivebox"
-                    )
-                  }
-                )
-
-                Divider()
-
-                Button(
-                  role: .destructive,
-                  action: { deleteSession(session) },
-                  label: {
-                    Label("Delete", systemImage: "trash")
-                  }
-                )
-              } label: {
-                Image(systemName: "ellipsis")
-                  .foregroundColor(.gray)
-                  .frame(width: 24, height: 24)
-                  .contentShape(Rectangle())
-              }
-              .menuIndicator(.hidden)
-              .buttonStyle(BorderlessButtonStyle())
+              ChatSessionMenuView(
+                session: session,
+                onShare: {
+                  print("")
+                },
+                onRename: { renameSession(session) },
+                onArchive: { archiveSession(session) },
+                onDelete: { deleteSession(session) }
+              )
             }
           }
         }
@@ -114,41 +82,30 @@ struct SidebarView: View {
         Label("New Chat", systemImage: "square.and.pencil")
       }
     }
-    .onChange(of: selectedChatSession) { oldValue, newValue in
-      if oldValue != newValue {
-        chatScreenVM.refreshSessions()
-      }
-    }
-    .alert("Rename Chat", isPresented: $showRenameDialog) {
-      TextField("Chat Name", text: $newSessionName)
-
-      Button("Cancel", role: .cancel) {
-        showRenameDialog = false
-      }
-
-      Button("Rename") {
+    .renameSessionDialog(
+      isPresented: $showRenameDialog,
+      sessionName: $newSessionName,
+      onRename: {
         if let session = sessionToRename, !newSessionName.isEmpty {
           let title = newSessionName.trimmingCharacters(in: .whitespacesAndNewlines)
           chatScreenVM.set(chatSession: session, title: title)
         }
-        showRenameDialog = false
       }
-    } message: {
-      Text("Enter a new name for this chat")
-    }
+    )
   }
 
   private func createNewChat() {
     // Check if there's already an empty chat session
     if let emptySession = chatScreenVM.allChatSessions.first(where: { $0.isEmpty }) {
       // Redirect to the existing empty session
-      selectedChatSession = emptySession
+      chatScreenVM.selectChatSession(emptySession)
     } else {
       // Create a new session
       let newSession = chatScreenVM.createChatSession(
         title: "Chat \(dateFormatter.string(from: Date()))"
       )
-      selectedChatSession = newSession
+      chatScreenVM.selectChatSession(newSession)
+      chatScreenVM.refreshSessions()
     }
   }
 
@@ -170,11 +127,13 @@ struct SidebarView: View {
   }
 
   private func deleteSession(_ chatSession: ChatSessionModel) {
-    let wasSelected = selectedChatSession == chatSession
+    let wasSelected = self.chatScreenVM.chatSession == chatSession
 
     chatScreenVM.delete(chatSession: chatSession)
+    chatScreenVM.refreshSessions()
+
     if wasSelected {
-      selectedChatSession = chatScreenVM.allChatSessions.first
+      chatScreenVM.selectChatSession(chatScreenVM.allChatSessions.first)
     }
   }
 }

@@ -52,8 +52,10 @@ public class ChatSessionSwiftData: ChatSessionStorageRepositoryProtocol {
 
   /// Find a chat session by ID
   public func find(byId id: UUID) -> ChatSessionModel? {
-    let predicate = #Predicate<ChatSessionModel> { $0.id == id }
     do {
+      let predicate = #Predicate<ChatSessionModel> { session in
+        session.id == id
+      }
       let results = try dataManager.fetch(ChatSessionModel.self, predicate: predicate)
       return results.first
     } catch {

@@ -7,6 +7,7 @@ protocol ChatSessionRepositoryProtocol {
   func delete(chatSession: ChatSessionModel) -> Bool
   func update(chatSession: ChatSessionModel)
   func getAllSessions(sortBy: [SortDescriptor<ChatSessionModel>]?) -> [ChatSessionModel]
+  func getSessionBy(id: UUID) -> ChatSessionModel?
 }
 
 extension ChatSessionRepositoryProtocol {
@@ -17,6 +18,7 @@ extension ChatSessionRepositoryProtocol {
 }
 
 class ChatSessionLocalStorage: ChatSessionRepositoryProtocol {
+
   static let shared = ChatSessionLocalStorage()
 
   private let sessionRepository: ChatSessionStorageRepositoryProtocol
@@ -83,13 +85,12 @@ class ChatSessionLocalStorage: ChatSessionRepositoryProtocol {
 
   /// Reset and rebuild the database - for use in cases of severe migration errors
   func resetDatabase() {
-    // Reset the database
     sessionRepository.resetDatabase()
-
-    // Refresh with empty data
     refreshSessions()
-
-    // Create a default session
     create(chatSession: ChatSessionModel(title: "New Chat"))
+  }
+
+  func getSessionBy(id: UUID) -> ChatSessionModel? {
+    return sessionRepository.find(byId: id)
   }
 }
