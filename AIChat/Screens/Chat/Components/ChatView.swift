@@ -13,7 +13,6 @@ struct ChatView: View {
       ScrollViewReader { scrollProxy in
         ScrollView {
           LazyVStack(spacing: 8) {
-
             if let messages = chatScreenVM.chatSession?.messages {
               ForEach(messages, id: \.id) { message in
                 MessageBubble(message: message)
@@ -53,11 +52,12 @@ struct ChatView: View {
               .padding(.horizontal, 16)
               .padding(.vertical, 12)
               .lineLimit(1...6)
-              .font(.body)
-              .textFieldStyle(CustomTextFieldStyle())
+              .textFieldStyle(.plain)
+              .font(.title3)
+              .frame(maxWidth: .infinity)
               .onKeyPress(.return) {
-                  sendMessage()
-                  return .handled
+                sendMessage()
+                return .handled
               }
               .disabled(isGeneratingResponse)
 
@@ -86,7 +86,6 @@ struct ChatView: View {
       .padding(.vertical)
     }
     .navigationTitle(chatScreenVM.chatSession?.title ?? "Chat")
-
   }
 
   private func scrollToBottom(scrollProxy: ScrollViewProxy) {
@@ -108,7 +107,6 @@ struct ChatView: View {
       messageText = ""
       isGeneratingResponse = false
     }
-
   }
 
   private func renameSession() {

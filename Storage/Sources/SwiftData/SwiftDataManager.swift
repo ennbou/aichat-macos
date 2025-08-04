@@ -29,7 +29,7 @@ extension DataManagerProtocol {
     predicate: Predicate<T>? = nil,
     sortBy: [SortDescriptor<T>]? = nil
   ) throws -> [T] {
-      try fetch(type, predicate: predicate, sortBy: sortBy)
+    try fetch(type, predicate: predicate, sortBy: sortBy)
   }
 }
 

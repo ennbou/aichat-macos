@@ -14,11 +14,9 @@ extension ChatSessionRepositoryProtocol {
   func getAllSessions(sortBy: [SortDescriptor<ChatSessionModel>]? = nil) -> [ChatSessionModel] {
     getAllSessions(sortBy: nil)
   }
-
 }
 
 class ChatSessionLocalStorage: ChatSessionRepositoryProtocol {
-
   static let shared = ChatSessionLocalStorage()
 
   private let sessionRepository: ChatSessionStorageRepositoryProtocol
@@ -35,7 +33,6 @@ class ChatSessionLocalStorage: ChatSessionRepositoryProtocol {
     do {
       try sessionRepository.save(chatSession: chatSession)
     } catch {
-
     }
   }
 
@@ -53,7 +50,6 @@ class ChatSessionLocalStorage: ChatSessionRepositoryProtocol {
     do {
       try sessionRepository.update(chatSession: chatSession)
     } catch {
-
     }
   }
 

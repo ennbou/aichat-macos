@@ -105,7 +105,7 @@ struct SidebarView: View {
         title: "Chat \(dateFormatter.string(from: Date()))"
       )
       chatScreenVM.selectChatSession(newSession)
-      chatScreenVM.refreshSessions()
+      chatScreenVM.loadSessions()
     }
   }
 
@@ -123,14 +123,13 @@ struct SidebarView: View {
   }
 
   private func archiveSession(_ session: ChatSessionModel) {
-
   }
 
   private func deleteSession(_ chatSession: ChatSessionModel) {
     let wasSelected = self.chatScreenVM.chatSession == chatSession
 
     chatScreenVM.delete(chatSession: chatSession)
-    chatScreenVM.refreshSessions()
+    chatScreenVM.loadSessions()
 
     if wasSelected {
       chatScreenVM.selectChatSession(chatScreenVM.allChatSessions.first)

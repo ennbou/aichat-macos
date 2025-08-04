@@ -5,7 +5,6 @@ import Storage
 
 @Observable
 final class ChatScreenVM {
-
   let chatSessinoRepostiry: ChatSessionRepositoryProtocol
   let openAIService = ServiceFactory.shared.makeOpenAIService()
 
@@ -28,14 +27,12 @@ final class ChatScreenVM {
     return chatSession
   }
 
-  func refreshSessions() {
+  func loadSessions() {
     let previousSessionId = chatSession?.id
     allChatSessions = chatSessinoRepostiry.getAllSessions(sortBy: nil)
 
-    // Try to maintain the current selection if it still exists
     if let previousId = previousSessionId,
-      let existingSession = allChatSessions.first(where: { $0.id == previousId })
-    {
+      let existingSession = allChatSessions.first(where: { $0.id == previousId }) {
       chatSession = existingSession
     } else if chatSession == nil {
       chatSession = allChatSessions.first
@@ -48,7 +45,7 @@ final class ChatScreenVM {
 
   func reloadSessionData() {
     guard let currentSessionId = chatSession?.id else { return }
-    
+
     if let reloadedSession = chatSessinoRepostiry.getSessionBy(id: currentSessionId) {
       chatSession = reloadedSession
     }
@@ -68,9 +65,9 @@ final class ChatScreenVM {
     chatSession.messages.append(message)
     chatSession.updateLastActivity()
     chatSessinoRepostiry.update(chatSession: chatSession)
-    
+
     reloadSessionData()
-    
+
     return message
   }
 
@@ -138,6 +135,5 @@ final class ChatScreenVM {
         )
       }
     }
-
   }
 }
